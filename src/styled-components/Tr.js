@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import styled from 'styled-components';
 import { getExtendedStyles } from '../utils';
 import { createSelectable } from 'react-selectable-fast';
+import { useSelector } from 'react-redux';
+import ConfigContext from '../context';
 
 const Tr = createSelectable(({
     selectableRef,
@@ -10,14 +12,36 @@ const Tr = createSelectable(({
     className,
     children,
     style,
-    columns
-}) => (
-    <div ref={ selectableRef } className={ className + (isSelected ? ' selected' : '') } style={ style }>
-        { columns.map((column, index) => (
-            children(column, index)
-        )) }
-    </div>
-));
+    columns,
+    type,
+    itemIndex,
+    primaryKey,
+    schema
+}) => {
+    const { getData } = useContext(ConfigContext);
+    const primaryKeyValue = useSelector(getData(tableData => (
+        type === 'body'
+            ? !_.isEmpty(schema) ? tableData.items[itemIndex] : tableData.items[itemIndex][primaryKey]
+            : null
+    )));
+
+    return (
+        <div
+            ref={ selectableRef }
+            className={
+                className +
+                (isSelecting ? ' drag' : '') +
+                (isSelected || isSelecting ? ' selected' : '')
+            }
+            style={ style }
+            data-primary-key={ primaryKeyValue }
+        >
+            { columns.map((column, index) => (
+                children(column, index)
+            )) }
+        </div>
+    );
+});
 
 const StyledTr = styled(Tr).attrs(({ top, left }) => ({
     style: { top, left }
@@ -31,7 +55,11 @@ const StyledTr = styled(Tr).attrs(({ top, left }) => ({
     position: ${props => props.position || 'relative'};
 
     &.selected {
-        background: rgba(0,123,255,.1)
+        background: rgba(0,123,255,.1);
+    }
+
+    &.drag {
+        cursor: pointer;
     }
 `;
 const ExtendedStyledTr = styled(StyledTr)(getExtendedStyles());

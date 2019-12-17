@@ -57,6 +57,10 @@ const renderRow = (
                 height={ rowHeight }
                 even={ rowIndex % 2 === 0 }
                 styles={ getStyles(styles.tr, 'body') }
+                itemIndex={ rowIndex }
+                type="body"
+                schema={ schema }
+                primaryKey={ primaryKey }
             >
                 { renderCol.bind(this, rowIndex, primaryKey, schema, styles, colClassName) }
             </Tr>
