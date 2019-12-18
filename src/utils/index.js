@@ -14,3 +14,4 @@ export isObject from './isObject';
 export isUndefined from './isUndefined';
 export prepareActionPayload from './prepareActionPayload';
 export toPascalCase from './toPascalCase';
+export touchEventToMouseEvent from './touchEventToMouseEvent';
