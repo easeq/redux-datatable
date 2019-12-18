@@ -39,8 +39,7 @@
         "object-assign-deep": "^0.4.0",
         "query-string": "^6.9.0",
         "react-datepicker": "^2.10.1",
-        "react-redux-notify": "^4.2.1",
-        "react-selectable-fast": "^3.1.1"
+        "react-redux-notify": "^4.2.1"
     },
     "devDependencies": {
         "axios": "^0.19.0",
