@@ -9,6 +9,7 @@ export getRenderer from './getRenderer';
 export getStyles from './getStyles';
 export getVisibleColumns from './getVisibleColumns';
 export isArray from './isArray';
+export isDescendant from './isDescendant';
 export isFunction from './isFunction';
 export isObject from './isObject';
 export isUndefined from './isUndefined';
