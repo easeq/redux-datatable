@@ -3,11 +3,24 @@ import React, { useContext, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Tbody, Tr, Td, Div, Row } from '../styled-components';
 import { Body as Renderers } from './Renderer';
-import { getStyles, getRenderer, getInitialVisibleColumns } from '../utils';
-import { MODIFY_DATA, SET_BODY_INNER_WIDTH, SET_TABLE_WIDTH, SET_VISIBLE_COLUMN_IDS, SET_COLUMN_WIDTHS } from '../actions';
 import { withScrollSpy } from '../hoc';
 import ConfigContext from '../context';
 import { createSelector } from 'reselect';
+import {
+    MODIFY_DATA,
+    SET_BODY_INNER_WIDTH,
+    SET_TABLE_WIDTH,
+    SET_VISIBLE_COLUMN_IDS,
+    SET_COLUMN_WIDTHS
+} from '../actions';
+import {
+    getStyles,
+    getRenderer,
+    getInitialVisibleColumns,
+    detectMouseLeftButtonClick,
+    touchEventToMouseEvent,
+    isDescendant
+} from '../utils';
 
 const addElementResizeEventListener = require('element-resize-event');
 const removeElementResizeEventListener = require('element-resize-event').unbind;
@@ -103,6 +116,7 @@ const Body = React.forwardRef(({ top: startTop = 0, config }, ref) => {
     const itemCount = useSelector(getData(tableData => (tableData.items || []).length));
     const isPrinting = useSelector(getData(tableData => !!tableData.isPrinting));
 
+    // Handle table dimensions
     const updateTableDimensions = () => {
         action(SET_BODY_INNER_WIDTH)({
             clientWidth: ref.current ? ref.current.parentElement.clientWidth : minWidth,
@@ -126,6 +140,56 @@ const Body = React.forwardRef(({ top: startTop = 0, config }, ref) => {
     }, []);
 
     useEffect(() => updateTableDimensions(), [ ref.current.clientWidth ]);
+
+    // Handle table row selection
+    const handleMouseDown = (e) => {
+        const isValidClick = e.type.includes('touch') || detectMouseLeftButtonClick(e);
+        if (!isValidClick) {
+            return;
+        }
+
+        const event = touchEventToMouseEvent(e);
+        ref.current.addEventListener('mousemove', handleMouseMove);
+    };
+
+    const getScrollStep = (offset) => Math.max(offset, 60) * 0.25;
+
+    const handleMouseUp = (e) => {
+        ref.current.removeEventListener('mousemove', handleMouseMove);
+    };
+
+    const doScroll = (top, clientY) => {
+        var newTop;
+        if (clientY > ref.current.clientHeight && top < ref.current.scrollTopMax) {
+            newTop = top + 55;
+        } else if (clientY < 0 && top <= 0) {
+            newTop = top - 55;
+        }
+
+        ref.current.scrollTop = newTop;
+    };
+
+    const handleMouseMove = _.throttle((e) => {
+        if (e.clientY > ref.current.clientHeight || e.clientY < 0) {
+            doScroll(ref.current.scrollTop, e.clientY);
+            handleMouseMove(e);
+        }
+    }, 10);
+
+
+    useEffect(() => {
+        ref.current.addEventListener('mousedown', handleMouseDown);
+        ref.current.addEventListener('mouseup', handleMouseUp);
+        ref.current.addEventListener('touchstart', handleMouseDown);
+        window.addEventListener('mouseup', handleMouseUp);
+
+        return () => {
+            ref.current.removeEventListener('mousedown', handleMouseDown);
+            ref.current.removeEventListener('mouseup', handleMouseUp);
+            ref.current.removeEventListener('touchstart', handleMouseDown);
+            window.removeEventListener('mouseup', handleMouseUp);
+        }
+    }, [])
 
     const totalHeight = rowHeight * itemCount;
     const visibleHeight = minHeight || totalHeight;
