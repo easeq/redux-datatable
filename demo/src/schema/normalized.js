@@ -32,8 +32,19 @@ export default {
     routes: {
         get: {
             route: '/page',
-            sort: 'id',
-            dir: 'asc',
+            // params: {
+            //     sort: 'id',
+            //     dir: 'asc',
+            //     search: {
+            //         pageId: {
+            //             operator: 'between',
+            //             field: 'pageId',
+            //             value: [134, 150],
+            //             logic: 'where',
+            //             type: 'number'
+            //         }
+            //     },
+            // },
             resultPath: {
                 data: 'data'
             }
