@@ -149,33 +149,35 @@ const Body = React.forwardRef(({ top: startTop = 0, config }, ref) => {
         }
 
         const event = touchEventToMouseEvent(e);
-        ref.current.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mousemove', handleMouseMove);
     };
-
-    const getScrollStep = (offset) => Math.max(offset, 60) * 0.25;
 
     const handleMouseUp = (e) => {
-        ref.current.removeEventListener('mousemove', handleMouseMove);
+        doScroll.cancel();
+        window.removeEventListener('mousemove', handleMouseMove);
     };
 
-    const doScroll = (top, clientY) => {
-        var newTop;
-        if (clientY > ref.current.clientHeight && top < ref.current.scrollTopMax) {
-            newTop = top + 55;
-        } else if (clientY < 0 && top <= 0) {
-            newTop = top - 55;
+    const doScroll = _.throttle((clientY, scrollBounds) => {
+        var top = ref.current.scrollTop;
+        if (clientY >= scrollBounds.bottom && top < ref.current.scrollTopMax) {
+            top = top + 55;
+        } else if (clientY < scrollBounds.top && top > 0) {
+            top = top - 55;
+        } else {
+            return;
         }
 
-        ref.current.scrollTop = newTop;
-    };
-
-    const handleMouseMove = _.throttle((e) => {
-        if (e.clientY > ref.current.clientHeight || e.clientY < 0) {
-            doScroll(ref.current.scrollTop, e.clientY);
-            handleMouseMove(e);
-        }
+        ref.current.scrollTop = top
+        doScroll(clientY, scrollBounds);
     }, 10);
 
+    const handleMouseMove = (e) => {
+        doScroll.cancel();
+        const scrollBounds = ref.current.getBoundingClientRect();
+        if (e.clientY >= scrollBounds.bottom || e.clientY <= scrollBounds.top) {
+            doScroll(e.clientY, scrollBounds);
+        }
+    };
 
     useEffect(() => {
         ref.current.addEventListener('mousedown', handleMouseDown);
